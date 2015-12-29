@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Bootstrap CSS -->
+  <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+
+  <title></title>
+  <style>
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .bar {
+    fill: steelblue;
+  }
+
+  </style>
+</head>
+<body>
+  <nav class="col-xl-2 col-lg-2" style="top:20px">
+    <ul class="nav nav-pills nav-stacked">
+      <li><a href="allStateLiteracyRatio.html">All States Literacy Ratio</a></li>
+      <li><a href="neStateLiteracyRatio.html">North East States Literacy Ratio</a></li>
+      <li><a href="allStateLiteracyComparision.html">All States Literate and Illiterate Plot</a></li>
+    </ul>
+  </nav>
+  <main class="container" style="font-size:10px">
+    <h1 class="text-center" style="font-family: 'Open Sans Condensed', sans-serif;">All States Literacy and Illiteracy Plot</h1>
+    <div id="svg" class="text-center col-xs-10 well"></div>
+  </main>
+  <script src="js/d3.min.js"></script>
+  <script>
+
+  var margin = {top: 20, right: 60, bottom: 150, left: 40},
+  width = 960 - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom;
+
+  var x0 = d3.scale.ordinal()
+  .rangeRoundBands([0, width], .1);
+
+  var x1 = d3.scale.ordinal();
+
+  var y = d3.scale.linear()
+  .range([height,height/3, 0]);
+
+  var color = d3.scale.ordinal()
+  .range(["#33cc33", "#ff3300"]);
+
+  var xAxis = d3.svg.axis()
+  .scale(x0)
+  .orient("bottom");
+
+  var yAxis = d3.svg.axis()
+  .scale(y)
+  .orient("left")
+  .tickFormat(d3.format(".2s"));
+
+  var svg = d3.select("#svg").append("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  d3.json("data/allStateLiteracyComparision.json", function(error, data) {
+    if (error) throw error;
+
+    var ageNames = d3.keys(data[0]).filter(function(key) { return key !== "state"; });
+
+    data.forEach(function(d) {
+      d.ages = ageNames.map(function(name) { return {name: name, value: +d[name]}; });
+    });
+
+    x0.domain(data.map(function(d) { return d.state; }));
+    x1.domain(ageNames).rangeRoundBands([0, x0.rangeBand()]);
+    y.domain([0,d3.max(data, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })/7, d3.max(data, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
+
+    svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis)
+    .selectAll("text")
+    .style("text-anchor", "end")
+    .attr("dx", "-.8em")
+    .attr("dy", ".15em")
+    .attr("transform", "rotate(-65)" );
+
+    svg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis)
+    .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 6)
+    .attr("dy", ".71em")
+    .style("text-anchor", "end")
+    .text("Population");
+
+    var state = svg.selectAll(".state")
+    .data(data)
+    .enter().append("g")
+    .attr("class", "state")
+    .attr("transform", function(d) { return "translate(" + x0(d.state) + ",0)"; });
+
+    state.selectAll("rect")
+    .data(function(d) { return d.ages; })
+    .enter().append("rect")
+    .attr("width", x1.rangeBand())
+    .attr("x", function(d) { return x1(d.name); })
+    .attr("y", function(d) { return y(d.value); })
+    .attr("height", function(d) { return height - y(d.value); })
+    .style("fill", function(d) { return color(d.name); });
+
+    var legend = svg.selectAll(".legend")
+    .data(ageNames.slice().reverse())
+    .enter().append("g")
+    .attr("class", "legend")
+    .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+    .attr("x", width - 18)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", color);
+
+    legend.append("text")
+    .attr("x", width - 24)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .style("text-anchor", "end")
+    .text(function(d) { return d; });
+
+  });
+
+  </script>
+  <script src="bootstrap/js/jquery-1.11.3.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="bootstrap/js/bootstrap.min.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <!-- Bootstrap CSS -->
+  <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+
+  <style>
+
+  .arc text {
+    text-anchor: middle;
+  }
+
+  .arc path {
+    stroke: #fff;
+  }
+
+  </style>
+</head>
+<body>
+  <nav class="col-xl-2 col-lg-2" style="top:20px">
+    <ul class="nav nav-pills nav-stacked">
+      <li><a href="allStateLiteracyRatio.html">All States Literacy Ratio</a></li>
+      <li><a href="neStateLiteracyRatio.html">North East States Literacy Ratio</a></li>
+      <li><a href="allStateLiteracyComparision.html">All States Literate and Illiterate Plot</a></li>
+    </ul>
+  </nav>
+  <main class="container">
+    <h1 class="text-center" style="font-family: 'Open Sans Condensed', sans-serif;">NorthEast States Male and Female Literacy Ratio</h1>
+    <div id="svg" class="text-center col-xs-10 well"></div>
+  </main>
+  <script src="js/d3.min.js"></script>
+  <script>
+  var total=0;
+  var width = 960,
+  height = 500,
+  radius = Math.min(width, height) / 2;
+
+  var color = d3.scale.ordinal()
+  .range(["#e5f2ff", "#b3d9ff", "#80bfff", "#3399ff"]);
+
+  var arc = d3.svg.arc()
+  .outerRadius(radius - 10)
+  .innerRadius(0);
+
+  var labelArc = d3.svg.arc()
+  .outerRadius(radius - 40)
+  .innerRadius(radius - 40);
+
+  var pie = d3.layout.pie()
+  .sort(null)
+  .value(function(d) { return d.population; });
+
+  var svg = d3.select("#svg").append("svg")
+  .attr("width", width)
+  .attr("height", height)
+  .append("g")
+  .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+  d3.json("data/neStateLiteracyRatio.json", function(error, data) {
+    if (error) throw error;
+
+    data.forEach(function(d) {
+      total+=d.population;
+    });
+
+    var g = svg.selectAll(".arc")
+    .data(pie(data))
+    .enter().append("g")
+    .attr("class", "arc");
+
+    g.append("path")
+    .attr("d", arc)
+    .style("fill", function(d) { return color(d.data.category); });
+
+    g.append("text")
+    .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
+    .attr("dy", ".35em")
+    .text(function(d) { return d.data.category+":"+Math.round((d.data.population*100)/total)+"%"; });
+  });
+
+  function type(d) {
+    d.population = +d.population;
+    return d;
+  }
+  </script>
+  <script src="bootstrap/js/jquery-1.11.3.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="bootstrap/js/bootstrap.min.js"></script>
+</body>
+</html>
